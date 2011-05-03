@@ -1,4 +1,6 @@
 require "hydra"
+require "active-fedora"
+
 module Hydra
 class Hydra::SampleModsDatastream < ActiveFedora::NokogiriDatastream       
     
