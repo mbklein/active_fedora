@@ -22,7 +22,8 @@ coverage
 rdoc
 pkg
 /.bundle
-/.rvmrc
+#/.rvmrc
 .yardoc
+doc
 
 ## PROJECT::SPECIFIC
