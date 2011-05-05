@@ -64,11 +64,11 @@ GEM
       nokogiri
       nokogiri
       nokogiri
-      om (>= 1.0.0)
       om
+      om (>= 1.0.0)
       stomp
       xml-simple
-    solrizer-fedora (1.0.2)
+    solrizer-fedora (1.0.3)
       active-fedora (>= 2.0.0)
       rsolr
       solrizer (>= 1.0.0)
