@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Matt Zumwalt", "McClain Looney"]
-  s.date = %q{2011-05-02}
+  s.date = %q{2011-05-05}
   s.description = %q{ActiveFedora provides for creating and managing objects in the Fedora Repository Architecture.}
   s.email = %q{matt.zumwalt@yourmediashelf.com}
   s.extra_rdoc_files = [
@@ -18,6 +18,7 @@ Gem::Specification.new do |s|
   ]
   s.files = [
     ".document",
+    ".gitmodules",
     ".hg/00changelog.i",
     ".hg/branch",
     ".hg/branch.cache",
@@ -166,6 +167,7 @@ Gem::Specification.new do |s|
     ".hg/undo.dirstate",
     ".hgignore",
     ".hgtags",
+    ".rvmrc",
     "COPYING.txt",
     "COYING.LESSER.txt",
     "Gemfile",
@@ -216,6 +218,8 @@ Gem::Specification.new do |s|
     "script/console",
     "script/destroy",
     "script/generate",
+    "solr/conf/schema.xml",
+    "solr/conf/solrconfig.xml",
     "solr/config/schema-1.5.xml",
     "solr/config/schema.xml",
     "solr/config/solrconfig-1.5.xml",
@@ -246,6 +250,7 @@ Gem::Specification.new do |s|
     "spec/integration/rf_fedora_object_spec.rb",
     "spec/integration/semantic_node_spec.rb",
     "spec/integration/solr_service_spec.rb",
+    "spec/rcov.opts",
     "spec/samples/models/audio_record.rb",
     "spec/samples/models/image.rb",
     "spec/samples/models/oral_history.rb",
@@ -281,17 +286,17 @@ Gem::Specification.new do |s|
     "spec/unit/semantic_node_spec.rb",
     "spec/unit/solr_config_options_spec.rb",
     "spec/unit/solr_service_spec.rb",
+    "tasks/active_fedora.rake",
     "tasks/hoe.rake",
     "tasks/rspec.rake"
   ]
   s.homepage = %q{http://yourmediashelf.com/activefedora}
   s.require_paths = ["lib"]
   s.rubyforge_project = %q{rubyfedora}
-  s.rubygems_version = %q{1.3.7}
+  s.rubygems_version = %q{1.7.2}
   s.summary = %q{A convenience libary for manipulating MODS (Metadata Object Description Schema) documents.}
 
   if s.respond_to? :specification_version then
-    current_version = Gem::Specification::CURRENT_SPECIFICATION_VERSION
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
@@ -300,6 +305,20 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<rspec>, ["< 2.0.0"])
       s.add_development_dependency(%q<mocha>, [">= 0.9.8"])
       s.add_development_dependency(%q<ruby-debug>, [">= 0"])
+      s.add_development_dependency(%q<jettywrapper>, [">= 0"])
+      s.add_development_dependency(%q<rcov>, [">= 0"])
+      s.add_development_dependency(%q<yard>, [">= 0"])
+      s.add_development_dependency(%q<RedCloth>, [">= 0"])
+      s.add_development_dependency(%q<solrizer-fedora>, [">= 0"])
+      s.add_development_dependency(%q<jeweler>, [">= 0"])
+      s.add_development_dependency(%q<rspec>, ["< 2.0.0"])
+      s.add_development_dependency(%q<mocha>, [">= 0.9.8"])
+      s.add_development_dependency(%q<ruby-debug>, [">= 0"])
+      s.add_development_dependency(%q<jettywrapper>, [">= 0"])
+      s.add_development_dependency(%q<rcov>, [">= 0"])
+      s.add_development_dependency(%q<yard>, [">= 0"])
+      s.add_development_dependency(%q<RedCloth>, [">= 0"])
+      s.add_development_dependency(%q<solrizer-fedora>, [">= 0"])
       s.add_development_dependency(%q<jeweler>, [">= 0"])
       s.add_development_dependency(%q<rspec>, ["< 2.0.0"])
       s.add_development_dependency(%q<mocha>, [">= 0.9.8"])
@@ -352,26 +371,53 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<rspec>, ["< 2.0.0"])
       s.add_development_dependency(%q<mocha>, [">= 0.9.8"])
       s.add_development_dependency(%q<ruby-debug>, [">= 0"])
+      s.add_development_dependency(%q<jeweler>, [">= 0"])
+      s.add_development_dependency(%q<rspec>, ["< 2.0.0"])
+      s.add_development_dependency(%q<mocha>, [">= 0.9.8"])
+      s.add_development_dependency(%q<ruby-debug>, [">= 0"])
+      s.add_development_dependency(%q<yard>, [">= 0"])
+      s.add_development_dependency(%q<RedCloth>, [">= 0"])
+      s.add_development_dependency(%q<rcov>, [">= 0"])
+      s.add_development_dependency(%q<solrizer>, [">= 0"])
+      s.add_development_dependency(%q<solrizer-fedora>, [">= 0"])
+      s.add_development_dependency(%q<jettywrapper>, [">= 0"])
       s.add_runtime_dependency(%q<solr-ruby>, [">= 0.0.6"])
       s.add_runtime_dependency(%q<xml-simple>, [">= 1.0.12"])
       s.add_runtime_dependency(%q<mime-types>, [">= 1.16"])
       s.add_runtime_dependency(%q<multipart-post>, [">= 0"])
       s.add_runtime_dependency(%q<nokogiri>, [">= 0"])
       s.add_runtime_dependency(%q<om>, [">= 1.0"])
-      s.add_runtime_dependency(%q<solrizer>, ["> 1.0.0"])
+      s.add_runtime_dependency(%q<solrizer>, ["= 1.0.3"])
       s.add_runtime_dependency(%q<activeresource>, [">= 0"])
       s.add_runtime_dependency(%q<mediashelf-loggable>, [">= 0"])
       s.add_runtime_dependency(%q<equivalent-xml>, [">= 0"])
       s.add_runtime_dependency(%q<facets>, [">= 0"])
-      s.add_runtime_dependency(%q<yard>, [">= 0"])
-      s.add_runtime_dependency(%q<RedCloth>, [">= 0"])
-      s.add_runtime_dependency(%q<rcov>, [">= 0"])
+      s.add_development_dependency(%q<yard>, [">= 0"])
+      s.add_development_dependency(%q<RedCloth>, [">= 0"])
+      s.add_development_dependency(%q<rcov>, [">= 0"])
+      s.add_development_dependency(%q<solrizer>, [">= 0"])
+      s.add_development_dependency(%q<solrizer-fedora>, [">= 0"])
+      s.add_development_dependency(%q<jettywrapper>, [">= 0"])
     else
       s.add_dependency(%q<active-fedora>, [">= 0"])
       s.add_dependency(%q<jeweler>, [">= 0"])
       s.add_dependency(%q<rspec>, ["< 2.0.0"])
       s.add_dependency(%q<mocha>, [">= 0.9.8"])
       s.add_dependency(%q<ruby-debug>, [">= 0"])
+      s.add_dependency(%q<jettywrapper>, [">= 0"])
+      s.add_dependency(%q<rcov>, [">= 0"])
+      s.add_dependency(%q<yard>, [">= 0"])
+      s.add_dependency(%q<RedCloth>, [">= 0"])
+      s.add_dependency(%q<solrizer-fedora>, [">= 0"])
+      s.add_dependency(%q<jeweler>, [">= 0"])
+      s.add_dependency(%q<rspec>, ["< 2.0.0"])
+      s.add_dependency(%q<mocha>, [">= 0.9.8"])
+      s.add_dependency(%q<ruby-debug>, [">= 0"])
+      s.add_dependency(%q<jettywrapper>, [">= 0"])
+      s.add_dependency(%q<rcov>, [">= 0"])
+      s.add_dependency(%q<yard>, [">= 0"])
+      s.add_dependency(%q<RedCloth>, [">= 0"])
+      s.add_dependency(%q<solrizer-fedora>, [">= 0"])
       s.add_dependency(%q<jeweler>, [">= 0"])
       s.add_dependency(%q<rspec>, ["< 2.0.0"])
       s.add_dependency(%q<mocha>, [">= 0.9.8"])
@@ -424,13 +470,23 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<rspec>, ["< 2.0.0"])
       s.add_dependency(%q<mocha>, [">= 0.9.8"])
       s.add_dependency(%q<ruby-debug>, [">= 0"])
+      s.add_dependency(%q<jeweler>, [">= 0"])
+      s.add_dependency(%q<rspec>, ["< 2.0.0"])
+      s.add_dependency(%q<mocha>, [">= 0.9.8"])
+      s.add_dependency(%q<ruby-debug>, [">= 0"])
+      s.add_dependency(%q<yard>, [">= 0"])
+      s.add_dependency(%q<RedCloth>, [">= 0"])
+      s.add_dependency(%q<rcov>, [">= 0"])
+      s.add_dependency(%q<solrizer>, [">= 0"])
+      s.add_dependency(%q<solrizer-fedora>, [">= 0"])
+      s.add_dependency(%q<jettywrapper>, [">= 0"])
       s.add_dependency(%q<solr-ruby>, [">= 0.0.6"])
       s.add_dependency(%q<xml-simple>, [">= 1.0.12"])
       s.add_dependency(%q<mime-types>, [">= 1.16"])
       s.add_dependency(%q<multipart-post>, [">= 0"])
       s.add_dependency(%q<nokogiri>, [">= 0"])
       s.add_dependency(%q<om>, [">= 1.0"])
-      s.add_dependency(%q<solrizer>, ["> 1.0.0"])
+      s.add_dependency(%q<solrizer>, ["= 1.0.3"])
       s.add_dependency(%q<activeresource>, [">= 0"])
       s.add_dependency(%q<mediashelf-loggable>, [">= 0"])
       s.add_dependency(%q<equivalent-xml>, [">= 0"])
@@ -438,6 +494,9 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<yard>, [">= 0"])
       s.add_dependency(%q<RedCloth>, [">= 0"])
       s.add_dependency(%q<rcov>, [">= 0"])
+      s.add_dependency(%q<solrizer>, [">= 0"])
+      s.add_dependency(%q<solrizer-fedora>, [">= 0"])
+      s.add_dependency(%q<jettywrapper>, [">= 0"])
     end
   else
     s.add_dependency(%q<active-fedora>, [">= 0"])
@@ -445,6 +504,20 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<rspec>, ["< 2.0.0"])
     s.add_dependency(%q<mocha>, [">= 0.9.8"])
     s.add_dependency(%q<ruby-debug>, [">= 0"])
+    s.add_dependency(%q<jettywrapper>, [">= 0"])
+    s.add_dependency(%q<rcov>, [">= 0"])
+    s.add_dependency(%q<yard>, [">= 0"])
+    s.add_dependency(%q<RedCloth>, [">= 0"])
+    s.add_dependency(%q<solrizer-fedora>, [">= 0"])
+    s.add_dependency(%q<jeweler>, [">= 0"])
+    s.add_dependency(%q<rspec>, ["< 2.0.0"])
+    s.add_dependency(%q<mocha>, [">= 0.9.8"])
+    s.add_dependency(%q<ruby-debug>, [">= 0"])
+    s.add_dependency(%q<jettywrapper>, [">= 0"])
+    s.add_dependency(%q<rcov>, [">= 0"])
+    s.add_dependency(%q<yard>, [">= 0"])
+    s.add_dependency(%q<RedCloth>, [">= 0"])
+    s.add_dependency(%q<solrizer-fedora>, [">= 0"])
     s.add_dependency(%q<jeweler>, [">= 0"])
     s.add_dependency(%q<rspec>, ["< 2.0.0"])
     s.add_dependency(%q<mocha>, [">= 0.9.8"])
@@ -497,13 +570,23 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<rspec>, ["< 2.0.0"])
     s.add_dependency(%q<mocha>, [">= 0.9.8"])
     s.add_dependency(%q<ruby-debug>, [">= 0"])
+    s.add_dependency(%q<jeweler>, [">= 0"])
+    s.add_dependency(%q<rspec>, ["< 2.0.0"])
+    s.add_dependency(%q<mocha>, [">= 0.9.8"])
+    s.add_dependency(%q<ruby-debug>, [">= 0"])
+    s.add_dependency(%q<yard>, [">= 0"])
+    s.add_dependency(%q<RedCloth>, [">= 0"])
+    s.add_dependency(%q<rcov>, [">= 0"])
+    s.add_dependency(%q<solrizer>, [">= 0"])
+    s.add_dependency(%q<solrizer-fedora>, [">= 0"])
+    s.add_dependency(%q<jettywrapper>, [">= 0"])
     s.add_dependency(%q<solr-ruby>, [">= 0.0.6"])
     s.add_dependency(%q<xml-simple>, [">= 1.0.12"])
     s.add_dependency(%q<mime-types>, [">= 1.16"])
     s.add_dependency(%q<multipart-post>, [">= 0"])
     s.add_dependency(%q<nokogiri>, [">= 0"])
     s.add_dependency(%q<om>, [">= 1.0"])
-    s.add_dependency(%q<solrizer>, ["> 1.0.0"])
+    s.add_dependency(%q<solrizer>, ["= 1.0.3"])
     s.add_dependency(%q<activeresource>, [">= 0"])
     s.add_dependency(%q<mediashelf-loggable>, [">= 0"])
     s.add_dependency(%q<equivalent-xml>, [">= 0"])
@@ -511,6 +594,9 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<yard>, [">= 0"])
     s.add_dependency(%q<RedCloth>, [">= 0"])
     s.add_dependency(%q<rcov>, [">= 0"])
+    s.add_dependency(%q<solrizer>, [">= 0"])
+    s.add_dependency(%q<solrizer-fedora>, [">= 0"])
+    s.add_dependency(%q<jettywrapper>, [">= 0"])
   end
 end
 
