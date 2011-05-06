@@ -52,7 +52,7 @@ namespace :active_fedora do
     # TODO: the following specs fail inconsistently en suite
     # but pass when run separately
     # for now, moving these out to their own task
-    t.spec_files.delete 'spec/unit/nokogiri_datastream.rb'
+    t.spec_files.delete 'spec/unit/nokogiri_datastream_spec.rb'
     t.rcov = true
     t.rcov_opts << "--exclude \"spec/* gems/*\" --rails"
   end
