@@ -22,7 +22,7 @@ begin
     gem.add_dependency('multipart-post')
     gem.add_dependency('nokogiri')
     gem.add_dependency('om', '>= 1.0')
-    gem.add_dependency('solrizer', '1.0.3')
+    gem.add_dependency('solrizer', '1.0.4')
     gem.add_dependency("activeresource")
     gem.add_dependency("mediashelf-loggable")
     gem.add_dependency("equivalent-xml")

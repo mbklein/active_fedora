@@ -17,6 +17,7 @@ JETTY_PARAMS = {
     Rake::Task["active_fedora:configure_jetty"].invoke
     error = Jettywrapper.wrap(JETTY_PARAMS) do
       Rake::Task["active_fedora:load_fixtures"].invoke
+      Rake::Task["active_fedora:nokogiri_datastreams"].invoke
       Rake::Task["active_fedora:rspec"].invoke
     end
     raise "test failures: #{error}" if error
@@ -48,8 +49,16 @@ namespace :active_fedora do
 
   Spec::Rake::SpecTask.new(:rspec) do |t|
     t.spec_files = FileList['spec/**/*_spec.rb']
+    # TODO: the following specs fail inconsistently en suite
+    # but pass when run separately
+    # for now, moving these out to their own task
+    t.spec_files.delete 'spec/unit/nokogiri_datastream.rb'
     t.rcov = true
     t.rcov_opts << "--exclude \"spec/* gems/*\" --rails"
+  end
+
+  Spec::Rake::SpecTask.new(:nokogiri_datastreams) do |t|
+    t.spec_files = ['spec/unit/nokogiri_datastream_spec.rb']
   end
 
   task :refresh_fixtures do
