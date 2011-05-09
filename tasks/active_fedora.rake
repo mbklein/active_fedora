@@ -27,7 +27,6 @@ task :hudson do
 end
 
 
-
 namespace :active_fedora do
   require 'lib/active-fedora'
 
