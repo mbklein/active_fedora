@@ -22,6 +22,8 @@ require 'active_fedora/relationship.rb'
 require 'active_fedora/rels_ext_datastream.rb'
 require 'active_fedora/semantic_node.rb'
 
+require 'active_fedora/railtie' if defined?(Rails) && Rails.version >= "3.0"
+
 SOLR_DOCUMENT_ID = ActiveFedora::SolrService.id_field unless defined?(SOLR_DOCUMENT_ID)
 ENABLE_SOLR_UPDATES = true unless defined?(ENABLE_SOLR_UPDATES)
 
@@ -38,23 +40,23 @@ module ActiveFedora #:nodoc:
   # Initializes ActiveFedora's connection to Fedora and Solr based on the info in fedora.yml
   # If RAILS_ENV is set, it will use that environment.  Defaults to "development".
   # @param [String] config_path (optional) the path to fedora.yml
-  #   If config_path is not provided and RAILS_ROOT is set, it will look in RAILS_ENV/config/fedora.yml.  Otherwise, it will look in your config/fedora.yml.  Failing that, it will use localhost urls.
+  #   If config_path is not provided and Rails.root is set, it will look in RAILS_ENV/config/fedora.yml.  Otherwise, it will look in your config/fedora.yml.  Failing that, it will use localhost urls.
   def self.init( config_path=nil )
     
     config_env = defined?(RAILS_ENV) ? RAILS_ENV : "development"
     
     if config_path.nil? 
-      if defined?(RAILS_ROOT)
-        config_path = "#{RAILS_ROOT}/config/fedora.yml"
+      if defined?(Rails.root)
+        config_path = "#{Rails.root}/config/fedora.yml"
       else
         config_path = File.join("config","fedora.yml")
-        unless File.exist?(config_path)
-          config_path = File.join(File.dirname(__FILE__), "..", "config", "fedora.yml")
-          logger.info "Using the default fedora.yml that comes with active-fedora.  If you want to override this, pass the path to fedora.yml as an argument to ActiveFedora.init or set RAILS_ROOT and put fedora.yml into \#{RAILS_ROOT}/config."
-        end
       end
     end
 
+    unless File.exist?(config_path)
+      config_path = File.join(File.dirname(__FILE__), "..", "config", "fedora.yml")
+      logger.info "Using the default fedora.yml that comes with active-fedora.  If you want to override this, pass the path to fedora.yml as an argument to ActiveFedora.init or set Rails.root and put fedora.yml into \#{Rails.root}/config."
+    end
     
     logger.info("FEDORA: loading ActiveFedora config from #{File.expand_path(config_path)}")
     
@@ -108,18 +110,6 @@ end
 
 
 
-
-# if ![].respond_to?(:count)
-#   class Array
-#     puts "active_fedora is Adding count method to Array"
-#       def count(&action)
-#         count = 0
-#          self.each { |v| count = count + 1}
-#   #      self.each { |v| count = count + 1 if action.call(v) }
-#         return count
-#       end
-#   end
-# end
 
 module ActiveFedora
   class ServerError < Fedora::ServerError; end # :nodoc:
