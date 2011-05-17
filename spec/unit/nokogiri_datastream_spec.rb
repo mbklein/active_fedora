@@ -53,7 +53,6 @@ describe ActiveFedora::NokogiriDatastream do
     end
     
     it "should apply submitted hash to corresponding datastream field values" do
-      @mods_ds = Hydra::ModsArticleDatastream.new(:blob=>fixture(File.join("mods_articles","hydrangea_article1.xml")))
       result = @mods_ds.update_indexed_attributes( {[{":person"=>"0"}, "role"]=>{"0"=>"role1", "1"=>"role2", "2"=>"role3"} })
       result.should == {"person_0_role"=>{"0"=>"role1", "1"=>"role2", "2"=>"role3"}}
       # xpath = ds.class.accessor_xpath(*field_key)

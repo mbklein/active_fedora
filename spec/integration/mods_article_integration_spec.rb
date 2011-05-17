@@ -40,8 +40,6 @@ describe ActiveFedora::Base do
       @test_article.save
       retrieved_article = HydrangeaArticle.load_instance("hydrangea:fixture_mods_article1")
       ds = retrieved_article.datastreams["descMetadata"]
-      puts "RETRIEVED ARTICLE XML"
-      puts ds.to_xml
       ds.term_values({:person=>0}, :first_name).should == ["Replacement FirstName"]
       retrieved_article.get_values_from_datastream("descMetadata", [{:person=>0}, :first_name]).should == ["Replacement FirstName"]
     end
