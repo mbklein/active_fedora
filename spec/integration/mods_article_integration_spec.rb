@@ -33,9 +33,6 @@ describe ActiveFedora::Base do
       @test_article.update_indexed_attributes({[{:person=>0}, :first_name] => "GIVEN NAMES"}, :datastreams=>"descMetadata")
     end
     it "should update the xml in the specified datatsream and save those changes to Fedora" do
-      puts "INITIAL ARTICLE XML"
-      ds = @test_article.datastreams["descMetadata"]
-      puts ds.to_xml
       @test_article.get_values_from_datastream("descMetadata", [{:person=>0}, :first_name]).should == ["GIVEN NAMES"]
       test_args = {:params=>{[{:person=>0}, :first_name]=>{"0"=>"Replacement FirstName"}}, :opts=>{:datastreams=>"descMetadata"}}
       @test_article.update_indexed_attributes(test_args[:params], test_args[:opts])

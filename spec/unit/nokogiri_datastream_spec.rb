@@ -53,7 +53,7 @@ describe ActiveFedora::NokogiriDatastream do
     end
     
     it "should apply submitted hash to corresponding datastream field values" do
-      pending if ENV['HUDSON_BUILD'] == 'true'  # This test fails en suite in hudson
+      @mods_ds = Hydra::ModsArticleDatastream.new(:blob=>fixture(File.join("mods_articles","hydrangea_article1.xml")))
       result = @mods_ds.update_indexed_attributes( {[{":person"=>"0"}, "role"]=>{"0"=>"role1", "1"=>"role2", "2"=>"role3"} })
       result.should == {"person_0_role"=>{"0"=>"role1", "1"=>"role2", "2"=>"role3"}}
       # xpath = ds.class.accessor_xpath(*field_key)
@@ -89,11 +89,13 @@ describe ActiveFedora::NokogiriDatastream do
     # end
     # 
     it "should work for text fields" do 
-      pending if ENV['HUDSON_BUILD'] == 'true'  # This test fails en suite in hudson
+      @mods_ds = Hydra::ModsArticleDatastream.new(:blob=>fixture(File.join("mods_articles","hydrangea_article1.xml")))
       att= {[{"person"=>"0"},"description"]=>{"-1"=>"mork", "1"=>"york"}}
       result = @mods_ds.update_indexed_attributes(att)
-      result.should == {"person_0_description"=>{"0"=>"mork","1"=>"york"}}
+      @mods_ds.term_values({:person=>0},:description).should == ["mork", "york"]
       @mods_ds.get_values([{:person=>0},:description]).should == ['mork', 'york']
+      result.should == {"person_0_description"=>{"0"=>"mork","1"=>"york"}}
+      
       att= {[{"person"=>"0"},"description"]=>{"-1"=>"dork"}}
       result2 = @mods_ds.update_indexed_attributes(att)
       result2.should == {"person_0_description"=>{"2"=>"dork"}}
