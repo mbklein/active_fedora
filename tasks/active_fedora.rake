@@ -12,7 +12,7 @@ task :hudson do
       :jetty_port => 8983,
       :solr_home => File.expand_path(File.join(File.dirname(__FILE__),'..','jetty','solr')),
       :fedora_home => File.expand_path(File.join(File.dirname(__FILE__),'..','jetty','fedora','default')),
-      :startup_wait=>30
+      :startup_wait=>60
     }
     error = Jettywrapper.wrap(jetty_params) do
       Rake::Task["active_fedora:load_fixtures"].invoke
