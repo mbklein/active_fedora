@@ -1,28 +1,28 @@
 require 'fedora/base'
 require 'fedora/repository'
 
-class Fedora::Datastream < Fedora::BaseObject
+class Fedora::Datastream < Rubydora::Datastream #Fedora::BaseObject
   
   
-  def initialize(attrs = {})
-    super
-    if attrs
-      if attrs[:mime_type]
-        self.mime_type = attrs[:mime_type]
-      elsif attrs[:mimeType]
-        self.mime_type = attrs[:mimeType]
-      elsif attrs["mimeType"]
-        self.mime_type = attrs["mimeType"]
-      elsif attrs["mime_type"]
-        self.mime_type = attrs["mime_type"]
-      end 
-    end
-    self.control_group='M' if @attributes[:mimeType]
-  end
-  
-  def pid
-    attributes[:pid]
-  end
+  # def initialize(attrs = {})
+  #   super
+  #   if attrs
+  #     if attrs[:mime_type]
+  #       self.mime_type = attrs[:mime_type]
+  #     elsif attrs[:mimeType]
+  #       self.mime_type = attrs[:mimeType]
+  #     elsif attrs["mimeType"]
+  #       self.mime_type = attrs["mimeType"]
+  #     elsif attrs["mime_type"]
+  #       self.mime_type = attrs["mime_type"]
+  #     end 
+  #   end
+  #   self.control_group='M' if @attributes[:mimeType]
+  # end
+  # 
+  # def pid
+  #   attributes[:pid]
+  # end
 
   def control_group
     @attributes[:controlGroup]
@@ -31,13 +31,13 @@ class Fedora::Datastream < Fedora::BaseObject
     @attributes[:controlGroup]=cg
   end
   
-  def dsid
-    if attributes.has_key?(:dsid) 
-      attributes[:dsid]
-    else
-      attributes[:dsID]
-    end
-  end
+  # def dsid
+  #   if attributes.has_key?(:dsid) 
+  #     attributes[:dsid]
+  #   else
+  #     attributes[:dsID]
+  #   end
+  # end
   
   def label
     @attributes[:dsLabel]

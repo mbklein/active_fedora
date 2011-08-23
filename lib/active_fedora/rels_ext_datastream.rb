@@ -7,9 +7,8 @@ module ActiveFedora
     include Solrizer::FieldNameMapper
     
     
-    def initialize(attrs=nil)
-      super
-      self.dsid = "RELS-EXT"
+    def initialize(object, dsid="RELS-EXT", options={})
+      super(object, dsid, options)
     end
     
     def save

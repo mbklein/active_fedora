@@ -2,7 +2,7 @@ require 'xmlsimple'
 require 'rexml/document'
 require 'fedora/base'
 
-class Fedora::FedoraObject < Fedora::BaseObject
+class Fedora::FedoraObject < Rubydora::DigitalObject #Fedora::BaseObject
   attr_accessor :target_repository
 
   # = Parameters
@@ -17,9 +17,11 @@ class Fedora::FedoraObject < Fedora::BaseObject
   # objectXMLFormat<Symbol>::
   # ownerID<Symbol>::
   #-
-  def initialize(attrs = nil)
-    super
-    # TODO: check for required attributes
+  def initialize(attrs = {})
+    attributes = attrs.dup
+    pid = attributes.delete(:pid)
+    pid = Fedora::Repository.instance.nextid if !pid
+    super(pid)
   end
 
   ####
@@ -29,7 +31,7 @@ class Fedora::FedoraObject < Fedora::BaseObject
   
   def load_attributes_from_fedora
     #self.attributes.merge!(profile)
-    attributes.merge!(profile)
+    #attributes.merge!(profile)
   end
   
   # Reads all object properties from the object's FOXML into a hash.  Provides slightly more info than .profile, including the object state.
@@ -52,7 +54,7 @@ class Fedora::FedoraObject < Fedora::BaseObject
   def create_date
     if attributes[:create_date] 
       return attributes[:create_date]
-    elsif !new_object?
+    elsif !new?
         properties_from_fedora[:create_date]
     else 
       return nil
@@ -62,7 +64,7 @@ class Fedora::FedoraObject < Fedora::BaseObject
   def modified_date
     if attributes[:modified_date] 
       return attributes[:modified_date]
-    elsif !new_object?
+    elsif !new?
         properties_from_fedora[:modified_date]
     else 
       return nil
@@ -70,18 +72,10 @@ class Fedora::FedoraObject < Fedora::BaseObject
   end
 
 
-  def pid
-    self.attributes[:pid]
-  end
-
-  def pid=(new_pid)
-    self.attributes.merge!({:pid => new_pid})
-  end
-
   def state
     if attributes[:state] 
       return attributes[:state]
-    elsif !new_object?
+    elsif !new?
         properties_from_fedora[:state]
     else 
       return nil
@@ -99,7 +93,7 @@ class Fedora::FedoraObject < Fedora::BaseObject
   def label
     if attributes[:label] 
       return attributes[:label]
-    elsif !new_object?
+    elsif !new?
         properties_from_fedora[:label]
     else 
       return nil
@@ -114,7 +108,7 @@ class Fedora::FedoraObject < Fedora::BaseObject
   def owner_id
     if attributes[:owner_id] 
       return attributes[:owner_id]
-    elsif !new_object?
+    elsif !new?
         properties_from_fedora[:owner_id]
     else 
       return nil
@@ -125,20 +119,20 @@ class Fedora::FedoraObject < Fedora::BaseObject
     self.attributes.merge!({:ownerId => new_owner_id})
   end
   
-  def profile
-    # Use xmlsimple to slurp the attributes
-    retrieved_profile = XmlSimple.xml_in(Fedora::Repository.instance.fetch_custom(self.pid, :profile))
-    label = retrieved_profile["objLabel"].first unless retrieved_profile["objLabel"].first == {}
-    profile_hash = Hash[:pid => retrieved_profile["pid"],
-                          :owner_id => retrieved_profile["objOwnerId"].first,
-                          :label => label,
-                          :create_date =>  retrieved_profile["objCreateDate"].first,
-                          :modified_date => retrieved_profile["objLastModDate"].first,
-                          :methods_list_url => retrieved_profile["objDissIndexViewURL"].first,
-                          :datastreams_list_url => retrieved_profile["objItemIndexViewURL"].first,
-                          :state => retrieved_profile["objState"].first 
-                        ]                           
-  end
+  # def profile
+  #   # Use xmlsimple to slurp the attributes
+  #   retrieved_profile = XmlSimple.xml_in(Fedora::Repository.instance.fetch_custom(self.pid, :profile))
+  #   label = retrieved_profile["objLabel"].first unless retrieved_profile["objLabel"].first == {}
+  #   profile_hash = Hash[:pid => retrieved_profile["pid"],
+  #                         :owner_id => retrieved_profile["objOwnerId"].first,
+  #                         :label => label,
+  #                         :create_date =>  retrieved_profile["objCreateDate"].first,
+  #                         :modified_date => retrieved_profile["objLastModDate"].first,
+  #                         :methods_list_url => retrieved_profile["objDissIndexViewURL"].first,
+  #                         :datastreams_list_url => retrieved_profile["objItemIndexViewURL"].first,
+  #                         :state => retrieved_profile["objState"].first 
+  #                       ]                           
+  # end
 
   def object_xml
     Fedora::Repository.instance.fetch_custom(pid, :objectXML)

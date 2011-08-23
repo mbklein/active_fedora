@@ -30,7 +30,7 @@ module ActiveFedora
   #
   # =Implementation
   # This class is really a facade for a basic Fedora::FedoraObject, which is stored internally.
-  class Base
+  class Base 
     include MediaShelfClassLevelInheritableAttributes
     ms_inheritable_attributes  :ds_specs, :class_named_datastreams_desc
     include Model
@@ -195,11 +195,11 @@ module ActiveFedora
     # :prefix option will set the prefix on auto-generated DSID
     # @return [String] dsid of the added datastream
     def add_datastream(datastream, opts={})
-      datastream.pid = self.pid
-      if datastream.dsid == nil || datastream.dsid.empty?
-        prefix = opts.has_key?(:prefix) ? opts[:prefix] : "DS"
-        datastream.dsid = generate_dsid(prefix)
-      end
+      # datastream.pid = self.pid
+      # if datastream.dsid == nil || datastream.dsid.empty?
+      #   prefix = opts.has_key?(:prefix) ? opts[:prefix] : "DS"
+      #   datastream.dsid = generate_dsid(prefix)
+      # end
       datastreams[datastream.dsid] = datastream
       return datastream.dsid
     end
@@ -265,7 +265,7 @@ module ActiveFedora
     # Failing that, creates a new RelsExtDatastream and adds it to the object
     def rels_ext
       if !datastreams.has_key?("RELS-EXT") 
-        add_datastream(ActiveFedora::RelsExtDatastream.new)
+        add_datastream(ActiveFedora::RelsExtDatastream.new(@inner_object))
       end
       return datastreams["RELS-EXT"]
     end
@@ -280,7 +280,7 @@ module ActiveFedora
     # @param [Hash] opts options: :dsid, :label, :mimeType
     def add_file_datastream(file, opts={})
       label = opts.has_key?(:label) ? opts[:label] : ""
-      attrs = {:dsLabel => label, :controlGroup => 'M', :blob => file}
+      attrs = {:dsLabel => label, :controlGroup => 'M', :content => file}
       if opts.has_key?(:mime_type)
         attrs.merge!({:mimeType=>opts[:mime_type]})
       elsif opts.has_key?(:mimeType)
@@ -1069,12 +1069,12 @@ module ActiveFedora
           else
             attributes = {:dsLabel=>ar[1]}
           end
-          ds = ar.first.new(:dsid=>name)
+          ds = ar.first.new(@inner_object, name, attributes)
           # If you called has_metadata with a block, pass the block into the Datastream class
           if ar.last.class == Proc
             ar.last.call(ds)
           end
-          ds.attributes = attributes.merge(ds.attributes)
+          #ds.attributes = attributes.merge(ds.attributes)
           self.add_datastream(ds)
         end
       end
@@ -1092,7 +1092,7 @@ module ActiveFedora
     def update
       result = Fedora::Repository.instance.save(@inner_object)      
       datastreams_in_memory.each do |k,ds|
-        if ds.dirty? || ds.new_object? 
+        if ds.dirty? || ds.new? 
           if ds.class.included_modules.include?(ActiveFedora::MetadataDatastreamHelper) || ds.instance_of?(ActiveFedora::RelsExtDatastream)
           # if ds.kind_of?(ActiveFedora::MetadataDatastream) || ds.kind_of?(ActiveFedora::NokogiriDatastream) || ds.instance_of?(ActiveFedora::RelsExtDatastream)
             @metadata_is_dirty = true

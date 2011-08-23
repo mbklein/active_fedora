@@ -29,8 +29,8 @@ describe ActiveFedora::Base do
 
   before(:each) do
     Fedora::Repository.instance.stubs(:nextid).returns(increment_pid.to_s)
-    @test_object = ActiveFedora::Base.new
-    @test_object.new_object = true
+    @test_object = Fedora::FedoraObject.new
+    #@test_object.new_object = true
   end
 
   after(:each) do

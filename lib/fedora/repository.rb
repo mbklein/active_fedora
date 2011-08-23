@@ -1,4 +1,4 @@
-
+require 'rubydora' #TODO autoload
 require 'fedora/base'
 require 'fedora/connection'
 require 'fedora/formats'
@@ -117,7 +117,9 @@ module Fedora
     # boolean:: whether the operation is successful
     #-
     def save(object)
-      object.new_object? ? create(object) : update(object)
+      raise "HUH" if object.kind_of? Fedora::Datastream
+      object.save
+      #object.new? ? create(object) : object.save
     end
 
     def nextid(attrs={})
@@ -131,15 +133,23 @@ module Fedora
     def create(object)
       case object
         when Fedora::FedoraObject
-          pid = (object.pid ? object : 'new')
-          response = connection.post("#{url_for(pid)}?" + object.attributes.to_fedora_query, object.blob)
-          if response.code == '201'
-            object.pid = extract_pid(response) 
-            object.new_object = false
-            true
-          else
-            false
-          end
+          debugger
+          attrs = object.attributes.dup
+          attrs.delete(:pid)
+          obj = connection.create(object.pid, attrs)
+          object.pid = obj.pid
+          object
+          # response = connection.post("#{url_for(pid)}?" + object.attributes.to_fedora_query, object.blob)
+          # if response.code == '201'
+          #   object.pid = extract_pid(response) 
+          #   object.new_object = false
+          #   true
+          # else
+          #   false
+          # end
+        when NilClass
+          obj = connection.create(nil, attrs)
+          obj
         when Fedora::Datastream
           raise ArgumentError, "Missing dsID attribute" if object.dsid.nil?
           extra_headers = {}
@@ -148,35 +158,35 @@ module Fedora
             object.blob, extra_headers)
           if response.code == '201'
             object.new_object = false
-            true
+            object
           else
-            false
+            raise "Unable to create: #{response.inspect}"
           end
         else
-          raise ArgumentError, "Unknown object type"
+          raise ArgumentError, "Unknown object type #{object.class}"
       end
       
     end
   
-    # Update the given object
-    # == Return
-    # boolean:: whether the operation is successful
-    #-
-    def update(object)
-      raise ArgumentError, "Missing pid attribute" if object.nil? || object.pid.nil?
-      case object
-      when Fedora::FedoraObject
-        response = connection.put("#{url_for(object)}?" + object.attributes.to_fedora_query)
-        response.code == '200' || '307'
-      when Fedora::Datastream
-        raise ArgumentError, "Missing dsID attribute" if object.dsid.nil?
-        response = connection.put("#{url_for(object)}?" + object.attributes.to_fedora_query, object.blob)
-        response.code == '200' || '201'
-        return response.code
-      else
-        raise ArgumentError, "Unknown object type"
-      end
-    end
+    # # Update the given object
+    # # == Return
+    # # boolean:: whether the operation is successful
+    # #-
+    # def update(object)
+    #   raise ArgumentError, "Missing pid attribute" if object.nil? || object.pid.nil?
+    #   case object
+    #   when Fedora::FedoraObject
+    #     response = connection.put("#{url_for(object)}?" + object.attributes.to_fedora_query)
+    #     response.code == '200' || '307'
+    #   when Fedora::Datastream
+    #     raise ArgumentError, "Missing dsID attribute" if object.dsid.nil?
+    #     response = connection.put("#{url_for(object)}?" + object.attributes.to_fedora_query, object.blob)
+    #     response.code == '200' || '201'
+    #     return response.code
+    #   else
+    #     raise ArgumentError, "Unknown object type"
+    #   end
+    # end
   
     # Delete the given pid
     # == Parameters
@@ -281,7 +291,10 @@ module Fedora
     # or not (defaults to +false+).
     def connection(refresh = false)
       if refresh || @connection.nil?
-        @connection = Fedora::Connection.new(@fedora_url, Fedora::XmlFormat, @surrogate)
+#        @connection = Fedora::Connection.new(@fedora_url, Fedora::XmlFormat, @surrogate)
+puts "CONNECTING TO #{@fedora_url.to_s}"
+        @connection = Rubydora.connect(:url=>"#{@fedora_url.scheme}://#{@fedora_url.host}:#{@fedora_url.port}#{@fedora_url.path}", :user=>@fedora_url.user, :password => @fedora_url.password)
+        Rubydora.repository = @connection
       end
       @connection
     end

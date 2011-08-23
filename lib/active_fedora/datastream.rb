@@ -6,7 +6,7 @@ module ActiveFedora
     
     attr_accessor :dirty, :last_modified, :fields
   
-    def initialize(attrs = {})
+    def initialize(object, dsid, options = {})
       @fields={}
       @dirty = false
       super
@@ -18,10 +18,10 @@ module ActiveFedora
       return result
     end
   
-    #set this Datastream's content
-    def content=(content)
-      self.blob = content
-    end
+    # #set this Datastream's content
+    # def content=(content)
+    #   self.blob = content
+    # end
 
     def self.delete(parent_pid, dsid)
       Fedora::Repository.instance.delete("%s/datastreams/%s"%[parent_pid, dsid])
@@ -31,15 +31,15 @@ module ActiveFedora
       self.class.delete(self.pid, self.dsid)
     end
     
-    #get this datastreams identifier
-    def pid
-      self.attributes[:pid]
-    end
+    # #get this datastreams identifier
+    # def pid
+    #   self.attributes[:pid]
+    # end
   
-    #set this datastreams parent identifier
-    def pid=(pid)
-      self.attributes[:pid] = pid
-    end
+    # #set this datastreams parent identifier
+    # def pid=(pid)
+    #   self.attributes[:pid] = pid
+    # end
     
     #set this datastreams identifier (note: sets both dsID and dsid)
     def dsid=(dsid)
@@ -75,9 +75,10 @@ module ActiveFedora
     # Also triggers {#before_save} and {#after_save} callbacks
     def save
       before_save
-      result = Fedora::Repository.instance.save(self)
+      #result = Fedora::Repository.instance.save(self)
+      super
       after_save
-      result
+      #result
     end
     
     # Callback.  Does nothing by default.  Override this to insert behaviors before the save method.
