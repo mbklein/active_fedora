@@ -53,7 +53,7 @@ describe ActiveFedora do
       mock_result = mock("MockResult")
       mock_result.expects(:hits).returns([{SOLR_DOCUMENT_ID => "changeme:30"}])
       mock_solr.expects(:query).with(SOLR_DOCUMENT_ID + ':changeme\:30').returns(mock_result)
-      Fedora::Repository.instance.expects(:find_model).with("changeme:30", SpecModel::Basic).returns("fake object")
+      SpecModel::Basic.expects(:instantiate_from_solr_result).returns("fake object")
 
       ActiveFedora::SolrService.expects(:instance).returns(mock("SolrService", :conn => mock_solr))
   

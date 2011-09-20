@@ -2,10 +2,7 @@ require "solrizer"
 require 'nokogiri'
 require "loggable"
 
-#require 'active_support/core_ext/kernel/singleton_class'
-#require 'active_support/core_ext/class/attribute'
 require 'active_support/core_ext/class/inheritable_attributes'
-#require 'active_support/inflector'
 
 SOLR_DOCUMENT_ID = "id" unless (defined?(SOLR_DOCUMENT_ID) && !SOLR_DOCUMENT_ID.nil?)
 ENABLE_SOLR_UPDATES = true unless defined?(ENABLE_SOLR_UPDATES)
@@ -38,7 +35,7 @@ module ActiveFedora
     class_inheritable_accessor  :ds_specs, :class_named_datastreams_desc
     self.class_named_datastreams_desc = {}
     self.ds_specs = {}
-    attr_accessor :named_datastreams_desc
+    attr_accessor :named_datastreams_desc, :solr_values, :loaded_fedora_properties, :datastreams_configured
     
 
     has_relationship "collection_members", :has_collection_member
@@ -96,6 +93,7 @@ module ActiveFedora
       configure_defined_datastreams
 
       attributes = attrs.dup
+      attributes[:loaded_fedora_properties] = true unless attributes.has_key? :loaded_fedora_properties
       [:pid, :namespace, :new_object,:create_date, :modified_date].each { |k| attributes.delete(k)}
       self.attributes=attributes
     end
@@ -119,10 +117,31 @@ module ActiveFedora
         end_eval
 
         self.send(name)
+      elsif solr_values && solr_values.has_key?(name.to_s)
+        ### Create and invoke a proxy method 
+        self.class.class_eval <<-end_eval
+          def #{name.to_s}()
+            solr_values["#{name.to_s}"]
+          end
+        end_eval
+        self.send(name)
       else 
         super
       end
     end
+
+    def load_fedora_properties
+      unless new_object?
+        obj = Fedora::Repository.instance.find_objects("pid=#{pid}").first
+        if obj.nil?
+          raise ActiveFedora::ObjectNotFoundError, "The repository does not have an object with pid #{pid}.  The repository URL is #{Fedora::Repository.instance.base_url}"
+        end
+        doc = Nokogiri::XML::Document.parse(obj.object_xml)     
+        deserialize(doc)
+      end
+      self.loaded_fedora_properties = true
+    end
+
 
     #Saves a Base object, and any dirty datastreams, then updates 
     #the Solr index for this object.
@@ -183,7 +202,8 @@ module ActiveFedora
     # saved to fedora, the persisted datastreams will be included.
     # Datastreams that have been modified in memory are given preference over 
     # the copy in Fedora.
-    def datastreams
+    def datastreams(load_properties = true)
+      load_fedora_properties if load_properties && datastreams_configured && !loaded_fedora_properties
       if @new_object
         @datastreams = datastreams_in_memory
       else
@@ -835,28 +855,39 @@ module ActiveFedora
       @inner_object.label = new_label
     end
 
+
+    # Create an instance of the current Model from the given solr result
+    def self.desolrize(doc)
+      obj = self.new(:pid=>doc[SOLR_DOCUMENT_ID], :new_object=>false, :solr_values=>doc, :loaded_fedora_properties=>false)
+      obj.inner_object.new_object = false
+      obj
+    end
+
     # Create an instance of the current Model from the given FOXML
     # This method is used when you call load_instance on a Model
     # @param [Nokogiri::XML::Document] doc the FOXML of the object
-    def self.deserialize(doc) #:nodoc:
+    def self.deserialize(pid, doc) #:nodoc:
+      proto = self.new(:pid=>pid, :new_object=>false)
+      proto.deserialize(doc)
+    end
+
+    # Create an instance of the current Model from the given FOXML
+    # This method is used when you call load_instance on a Model
+    # @param [Nokogiri::XML::Document] doc the FOXML of the object
+    def deserialize(doc) #:nodoc:
       if doc.instance_of?(REXML::Document)
-        pid = doc.elements['/foxml:digitalObject'].attributes['PID']
-      
-        proto = self.new(:pid=>pid, :new_object=>false)
-        proto.datastreams.each do |name,ds|
+        datastreams(false).each do |name,ds|
           doc.elements.each("//foxml:datastream[@ID='#{name}']") do |el|
             # datastreams remain marked as new if the foxml doesn't have an entry for that datastream
             ds.new_object = false
-            proto.datastreams[name]=ds.class.from_xml(ds, el)          
+            datastreams(false)[name]=ds.class.from_xml(ds, el)          
           end
         end
-        proto.inner_object.new_object = false
-        return proto
+        inner_object.new_object = false
       elsif doc.instance_of?(Nokogiri::XML::Document)
         pid = doc.xpath('/foxml:digitalObject').first["PID"]
       
-        proto = self.new(:pid=>pid, :new_object=>false)
-        proto.datastreams.each do |name,ds|
+        datastreams(false).each do |name,ds|
           doc.xpath("//foxml:datastream[@ID='#{name}']").each do |node|
             # datastreams remain marked as new if the foxml doesn't have an entry for that datastream
             ds.new_object = false
@@ -865,15 +896,15 @@ module ActiveFedora
             if ds.kind_of?(ActiveFedora::NokogiriDatastream) 
               xml_content = Fedora::Repository.instance.fetch_custom(pid, "datastreams/#{name}/content")
               # node = node.search('./foxml:datastreamVersion[last()]/foxml:xmlContent/*').first
-              proto.datastreams[name]=ds.class.from_xml(xml_content, ds)
+              datastreams(false)[name]=ds.class.from_xml(xml_content, ds)
             else
-              proto.datastreams[name]=ds.class.from_xml(ds, node)          
+              datastreams(false)[name]=ds.class.from_xml(ds, node)          
             end
           end
         end
-        proto.inner_object.new_object = false
-        return proto
+        inner_object.new_object = false
       end
+      return self
     end
 
     #Return a hash of all available metadata fields for all 
@@ -1082,6 +1113,7 @@ module ActiveFedora
           self.add_datastream(ds)
         end
       end
+      self.datastreams_configured = true
     end
     
     # Deals with preparing new object to be saved to Fedora, then pushes it and its datastreams into Fedora. 
@@ -1098,7 +1130,6 @@ module ActiveFedora
       datastreams_in_memory.each do |k,ds|
         if ds.dirty? || ds.new_object? 
           if ds.class.included_modules.include?(ActiveFedora::MetadataDatastreamHelper) || ds.instance_of?(ActiveFedora::RelsExtDatastream)
-          # if ds.kind_of?(ActiveFedora::MetadataDatastream) || ds.kind_of?(ActiveFedora::NokogiriDatastream) || ds.instance_of?(ActiveFedora::RelsExtDatastream)
             @metadata_is_dirty = true
           end
           result = ds.save

@@ -26,11 +26,9 @@ describe ActiveFedora::Base do
   
   describe "deserialize" do
     it "should return an object whose inner_object is not marked as new.  The datastreams should only be marked new if the model expects a datastream that doesn't exist yet in fedora" do
-      #mocko = mock("object")
-      #ActiveFedora::Base.expects(:new).returns(mocko)
       @test_object.datastreams["sensitive_passages"].delete
       doc = Nokogiri::XML::Document.parse(@test_object.inner_object.object_xml)
-      result = OralHistorySampleModel.deserialize(doc)
+      result = OralHistorySampleModel.deserialize(@test_object.pid, doc)
       result.new_object?.should be_false
       result.datastreams_in_memory.should have_key("dublin_core")
       result.datastreams_in_memory.should have_key("properties")

@@ -46,6 +46,7 @@ describe ActiveFedora::SolrService do
   end
   
   describe "#reify_solr_results" do
+    class AudioRecord; end;
     before(:each) do
       @sample_solr_hits = [{"id"=>"my:_PID1_", "has_model_s"=>["info:fedora/afmodel:AudioRecord"]},
                             {"id"=>"my:_PID2_", "has_model_s"=>["info:fedora/afmodel:AudioRecord"]},
@@ -58,12 +59,10 @@ describe ActiveFedora::SolrService do
     it "should use Repository.find_model to instantiate objects" do
       solr_result = mock("solr result", :is_a? => true)
       solr_result.expects(:hits).returns(@sample_solr_hits)
-      Kernel.expects(:const_get).with("AudioRecord").returns("AudioRecord").times(3)
-      mock_repo = mock("repo")
-      mock_repo.expects(:find_model).with("my:_PID1_", "AudioRecord").returns("AR1")
-      mock_repo.expects(:find_model).with("my:_PID2_", "AudioRecord").returns("AR2")
-      mock_repo.expects(:find_model).with("my:_PID3_", "AudioRecord").returns("AR3")
-      Fedora::Repository.expects(:instance).returns(mock_repo).times(3)
+      Kernel.expects(:const_get).with("AudioRecord").returns(AudioRecord).times(3)
+      AudioRecord.expects(:desolrize).with(@sample_solr_hits[0]).returns("AR1")
+      AudioRecord.expects(:desolrize).with(@sample_solr_hits[1]).returns("AR2")
+      AudioRecord.expects(:desolrize).with(@sample_solr_hits[2]).returns("AR3")
       ActiveFedora::SolrService.reify_solr_results(solr_result).should == ["AR1", "AR2", "AR3"]
     end
   end

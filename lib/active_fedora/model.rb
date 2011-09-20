@@ -7,6 +7,7 @@ module ActiveFedora
   # This module mixes various methods into the including class,
   # much in the way ActiveRecord does.  
   module Model 
+    DEFAULT_FIND_ROWS = 1000
     extend ActiveFedora::FedoraObject
 
 
@@ -57,7 +58,7 @@ module ActiveFedora
       # Returns an Array of objects of the Class that +find+ is being 
       # called on
       def find(args, opts={})
-        opts = {:rows=>25}.merge(opts)
+        opts = {:rows=>DEFAULT_FIND_ROWS}.merge(opts)
         return_multiple = false
         if args == :all
           return_multiple = true
@@ -74,17 +75,21 @@ module ActiveFedora
         else
           hits = SolrService.instance.conn.query(q).hits 
         end
-        results = hits.map do |hit|
-          obj = Fedora::Repository.instance.find_model(hit[SOLR_DOCUMENT_ID], self)
-          #obj.inner_object.new_object = false
-          #return obj
-        end
+
+        results = instantiate_from_solr_result(hits)
         if return_multiple == true
           return results
         else
           return results.first
         end
       end
+
+      def instantiate_from_solr_result(hits)
+        hits.map do |hit|
+          desolrize(hit)
+        end
+      end
+
 
       #Sends a query directly to SolrService
       def solr_search(query, args={})

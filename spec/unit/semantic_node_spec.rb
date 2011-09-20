@@ -2,10 +2,6 @@ require File.join( File.dirname(__FILE__), "../spec_helper" )
 
 require 'active_fedora'
 require 'xmlsimple'
-#require 'mocha'
-
-#include ActiveFedora::SemanticNode
-#include Mocha::API
 
 @@last_pid = 0
 
@@ -36,6 +32,7 @@ describe ActiveFedora::SemanticNode do
       include ActiveFedora::SemanticNode
       
       attr_accessor :pid
+
     end
     
     @node = SpecNode.new
@@ -174,6 +171,9 @@ describe ActiveFedora::SemanticNode do
     it "should create outbound relationship finders that return an array of fedora PIDs" do
       SpecNode.has_relationship("containers", :is_member_of, :inbound => false)
       local_node = SpecNode.new
+      local_node.expects(:loaded_fedora_properties).returns(false)
+      local_node.expects(:load_fedora_properties)
+      local_node.expects(:new_object?).returns(false)
       local_node.internal_uri = "info:fedora/#{@pid}"
       
       local_node.add_relationship(ActiveFedora::Relationship.new(:subject => :self, :predicate => :is_member_of, :object => "info:fedora/container:A") )
@@ -250,6 +250,7 @@ describe ActiveFedora::SemanticNode do
     
   describe '#create_inbound_relationship_finders' do
     
+    class AudioRecord; end;
     it 'should respond to #create_inbound_relationship_finders' do
       SpecNode.should respond_to(:create_inbound_relationship_finders)
     end
@@ -268,17 +269,24 @@ describe ActiveFedora::SemanticNode do
     
     it "resulting finder should search against solr and use Model#load_instance to build an array of objects" do
       solr_result = (mock("solr result", :is_a? => true, :hits => @sample_solr_hits))
-      mock_repo = mock("repo")
-      mock_repo.expects(:find_model).with("_PID1_", "AudioRecord").returns("AR1")
-      mock_repo.expects(:find_model).with("_PID2_", "AudioRecord").returns("AR2")
-      mock_repo.expects(:find_model).with("_PID3_", "AudioRecord").returns("AR3")
+      #mock_repo = mock("repo")
+      # mock_repo.expects(:find_model).with("_PID1_", "AudioRecord").returns("AR1")
+      # mock_repo.expects(:find_model).with("_PID2_", "AudioRecord").returns("AR2")
+      # mock_repo.expects(:find_model).with("_PID3_", "AudioRecord").returns("AR3")
+
+
       SpecNode.create_inbound_relationship_finders("parts", :is_part_of, :inbound => true)
       local_node = SpecNode.new()
+      local_node.expects(:loaded_fedora_properties).returns(false)
+      local_node.expects(:load_fedora_properties)
       local_node.expects(:pid).returns("test:sample_pid")
       SpecNode.expects(:relationships_desc).returns({:inbound=>{"parts"=>{:predicate=>:is_part_of}}}).at_least_once()
       ActiveFedora::SolrService.instance.conn.expects(:query).with("is_part_of_s:info\\:fedora/test\\:sample_pid", :rows=>25).returns(solr_result)
-      Fedora::Repository.expects(:instance).returns(mock_repo).times(3)
-      Kernel.expects(:const_get).with("AudioRecord").returns("AudioRecord").times(3)
+      # Fedora::Repository.expects(:instance).returns(mock_repo).times(3)
+      Kernel.expects(:const_get).with("AudioRecord").returns(AudioRecord).times(3)
+      AudioRecord.expects(:desolrize).with(@sample_solr_hits[0]).returns("AR1")
+      AudioRecord.expects(:desolrize).with(@sample_solr_hits[1]).returns("AR2")
+      AudioRecord.expects(:desolrize).with(@sample_solr_hits[2]).returns("AR3")
       local_node.parts.should == ["AR1", "AR2", "AR3"]
     end
     
@@ -286,6 +294,8 @@ describe ActiveFedora::SemanticNode do
       solr_result = mock("solr result")
       SpecNode.create_inbound_relationship_finders("constituents", :is_constituent_of, :inbound => true)
       local_node = SpecNode.new
+      local_node.expects(:loaded_fedora_properties).returns(false)
+      local_node.expects(:load_fedora_properties)
       mock_repo = mock("repo")
       mock_repo.expects(:find_model).never
       local_node.expects(:pid).returns("test:sample_pid")
@@ -298,6 +308,8 @@ describe ActiveFedora::SemanticNode do
     it "resulting _ids finder should search against solr and return an array of fedora PIDs" do
       SpecNode.create_inbound_relationship_finders("parts", :is_part_of, :inbound => true)
       local_node = SpecNode.new
+      local_node.expects(:loaded_fedora_properties).returns(false)
+      local_node.expects(:load_fedora_properties)
       local_node.expects(:pid).returns("test:sample_pid")
       SpecNode.expects(:relationships_desc).returns({:inbound=>{"parts"=>{:predicate=>:is_part_of}}}).at_least_once() 
       ActiveFedora::SolrService.instance.conn.expects(:query).with("is_part_of_s:info\\:fedora/test\\:sample_pid", :rows=>25).returns(mock("solr result", :hits => [Hash["id"=>"pid1"], Hash["id"=>"pid2"]]))
@@ -344,19 +356,21 @@ describe ActiveFedora::SemanticNode do
       it "should read from relationships array and use Repository.find_model to build an array of objects" do
         SpecNode.create_outbound_relationship_finders("containers", :is_member_of)
         local_node = SpecNode.new
+        local_node.expects(:loaded_fedora_properties).returns(false)
+        local_node.expects(:load_fedora_properties)
         local_node.expects(:outbound_relationships).returns({:is_member_of => ["my:_PID1_", "my:_PID2_", "my:_PID3_"]}).times(2)      
+        local_node.expects(:new_object?).returns(false)
         mock_repo = mock("repo")
         solr_result = mock("solr result", :is_a? => true)
-        solr_result.expects(:hits).returns(
-                      [{"id"=> "my:_PID1_", "has_model_s"=>["info:fedora/afmodel:SpecNode"]},
+        sample_solr_hits = [{"id"=> "my:_PID1_", "has_model_s"=>["info:fedora/afmodel:SpecNode"]},
                        {"id"=> "my:_PID2_", "has_model_s"=>["info:fedora/afmodel:SpecNode"]}, 
-                       {"id"=> "my:_PID3_", "has_model_s"=>["info:fedora/afmodel:SpecNode"]}])
+                       {"id"=> "my:_PID3_", "has_model_s"=>["info:fedora/afmodel:SpecNode"]}]
+        solr_result.expects(:hits).returns(sample_solr_hits)
 
         ActiveFedora::SolrService.instance.conn.expects(:query).with("id:my\\:_PID1_ OR id:my\\:_PID2_ OR id:my\\:_PID3_").returns(solr_result)
-        mock_repo.expects(:find_model).with("my:_PID1_", SpecNode).returns("AR1")
-        mock_repo.expects(:find_model).with("my:_PID2_", SpecNode).returns("AR2")
-        mock_repo.expects(:find_model).with("my:_PID3_", SpecNode).returns("AR3")
-        Fedora::Repository.expects(:instance).returns(mock_repo).times(3)
+        SpecNode.expects(:desolrize).with(sample_solr_hits[0]).returns("AR1")
+        SpecNode.expects(:desolrize).with(sample_solr_hits[1]).returns("AR2")
+        SpecNode.expects(:desolrize).with(sample_solr_hits[2]).returns("AR3")
         local_node.containers.should == ["AR1", "AR2", "AR3"]
       end
     
@@ -364,6 +378,9 @@ describe ActiveFedora::SemanticNode do
         solr_result = mock("solr result")
         SpecNode.create_outbound_relationship_finders("constituents", :is_constituent_of)
         local_node = SpecNode.new
+        local_node.expects(:loaded_fedora_properties).returns(false)
+        local_node.expects(:load_fedora_properties)
+        local_node.expects(:new_object?).returns(false)
         mock_repo = mock("repo")
         mock_repo.expects(:find_model).never
         local_node.stubs(:internal_uri)
@@ -374,14 +391,20 @@ describe ActiveFedora::SemanticNode do
       it "(:response_format => :id_array) should read from relationships array" do
         SpecNode.create_outbound_relationship_finders("containers", :is_member_of)
         local_node = SpecNode.new
+        local_node.expects(:loaded_fedora_properties).returns(false)
+        local_node.expects(:load_fedora_properties)
         local_node.expects(:outbound_relationships).returns({:is_member_of => []}).times(2)
+        local_node.expects(:new_object?).returns(false)
         local_node.containers_ids
       end
     
       it "(:response_format => :id_array) should return an array of fedora PIDs" do
         SpecNode.create_outbound_relationship_finders("containers", :is_member_of)
         local_node = SpecNode.new
+        local_node.expects(:loaded_fedora_properties).returns(false)
+        local_node.expects(:load_fedora_properties)
         local_node.add_relationship(@test_relationship1)
+        local_node.expects(:new_object?).returns(false)
         result = local_node.containers_ids
         result.should be_instance_of(Array)
         result.should include("demo:10")
@@ -546,12 +569,7 @@ describe ActiveFedora::SemanticNode do
     lambda { SpecNode.predicate_lookup(:has_foo) }.should raise_error ActiveFedora::UnregisteredPredicateError
   end
   
-  it 'should provide #relationships_to_rels_ext' do
-    SpecNode.should respond_to(:relationships_to_rels_ext)
-    @node.should respond_to(:to_rels_ext)
-  end
-  
-  describe '#relationships_to_rels_ext' do
+  describe '#to_rels_ext' do
     
     before(:all) do
       @sample_rels_ext_xml = <<-EOS

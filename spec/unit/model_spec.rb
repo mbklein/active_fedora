@@ -105,8 +105,9 @@ describe ActiveFedora::Model do
       mock_result.expects(:hits).returns([{"id" => "changeme:30"}, {"id" => "changeme:22"}])
       mock_solr.expects(:query).with('has_model_s:info\\:fedora/afmodel\\:SpecModel\:\:Basic', :rows=>1001).returns(mock_result)
       ActiveFedora::SolrService.expects(:instance).returns(mock("SolrService", :conn => mock_solr))
-      Fedora::Repository.instance.expects(:find_model).with("changeme:30", SpecModel::Basic).returns("Fake Object1")
-      Fedora::Repository.instance.expects(:find_model).with("changeme:22", SpecModel::Basic).returns("Fake Object2")
+      SpecModel::Basic.expects(:desolrize).with("id" => "changeme:30").returns("Fake Object1")
+      SpecModel::Basic.expects(:desolrize).with("id" => "changeme:22").returns("Fake Object2")
+
       SpecModel::Basic.find(:all, :rows=>1001).should == ["Fake Object1", "Fake Object2"]
     end
     
@@ -116,7 +117,7 @@ describe ActiveFedora::Model do
       mock_result.expects(:hits).returns([{"id" => "changeme:30"}])
       mock_solr.expects(:query).with('id:changeme\:30').returns(mock_result)
       ActiveFedora::SolrService.expects(:instance).returns(mock("SolrService", :conn => mock_solr))
-      Fedora::Repository.instance.expects(:find_model).with("changeme:30", SpecModel::Basic).returns("Fake Object")
+      SpecModel::Basic.expects(:desolrize).with("id" => "changeme:30").returns("Fake Object")
     
       SpecModel::Basic.find("changeme:30").should == "Fake Object"
     end
@@ -126,7 +127,7 @@ describe ActiveFedora::Model do
       mock_result = mock("MockResult")
       mock_result.expects(:hits).returns([{"id" => "changeme:30"}])
       mock_solr.expects(:query).with('id:changeme\:30').returns(mock_result)
-      Fedora::Repository.instance.expects(:find_model).with("changeme:30", SpecModel::Basic).returns("fake object")
+      SpecModel::Basic.expects(:desolrize).with("id" => "changeme:30").returns("Fake Object1")
 
       ActiveFedora::SolrService.expects(:instance).returns(mock("SolrService", :conn => mock_solr))
     
