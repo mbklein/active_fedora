@@ -4,7 +4,10 @@ module ActiveFedora
   class DatastreamHash
     extend Forwardable
 
-    def_delegators :@hash, *(Hash.instance_methods(false))
+    # delegate instance methods from everything up to, but not including, Object
+    delegates = Hash.ancestors.slice(0,Hash.ancestors.find_index { |m| m == Object })
+    methods_to_delegate = delegates.collect { |m| m.instance_methods(false) }.flatten.uniq
+    def_delegators :@hash, *methods_to_delegate
     
     def initialize (obj, &block)
       @obj = obj
